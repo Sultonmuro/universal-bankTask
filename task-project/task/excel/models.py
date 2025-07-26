@@ -31,9 +31,9 @@ class Cards(models.Model):
         verbose_name_plural = "Cards"
 class SmsLog(models.Model):
     card = models.ForeignKey(Cards, on_delete=models.CASCADE,related_name='sms_logs')
-    message = models.TextField()
-    sent_at = models.DateTimeField(auto_now_add=True)
-    success = models.BooleanField(default=True)
+    message = models.TextField(verbose_name="Сообщение")
+    sent_at = models.DateTimeField(auto_now_add=True,verbose_name="Дата отправки")
+    success = models.BooleanField(default=True,verbose_name="Успех")
 
     def __str__(self):
         return f"SMS to {self.card.phone_number} for {self.card.owner} at {self.sent_at.strftime('Y-%m-%d %H:%M')}"
@@ -41,7 +41,11 @@ class SmsLog(models.Model):
 
     class Meta:
         ordering = ['-sent_at']
-        verbose_name = "SMS Log"
-        verbose_name_plural = "SMS logs"
+        verbose_name = "Лог SMS/Telegram"
+        verbose_name_plural = "Логи SMS/Telegram"
+    
+
+
+
 
     

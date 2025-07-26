@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-
+from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -46,8 +46,7 @@ EXCHANGE_RATES = {
     'RUB_UZS': 140.00, # Example: 1 RUB = 140 UZS
     
 }
-TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
-TELEGRAM_CHAT_ID = "YOUR_TELEGRAM_CHAT_ID"
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -88,7 +87,33 @@ DATABASES = {
     }
 }
 
-
+TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
+TELEGRAM_BOT_CHAT_ID = config('TELEGRAM_BOT_CHAT_ID', default='')
+# ДОБАВЬТЕ ЭТУ СТРОКУ ДЛЯ ОТЛАДКИ:
+print(f"DEBUG: TELEGRAM_BOT_TOKEN loaded: {TELEGRAM_BOT_TOKEN[:5]}...")
+print(f"DEBUG: TELEGRAM_BOT_CHAT_ID loaded: {TELEGRAM_BOT_CHAT_ID}")
+TELEGRAM_LOG_MESSAGES = {
+    'card_balance_status': {
+        'en': "Dear {owner}, your card ending in {last_4_digits} has a balance of {balance} UZS. Status: {status}.",
+        'uz': "Hurmatli {owner}, sizning {last_4_digits} bilan tugaydigan kartangizda {balance} UZS balansi bor. Holat: {status}.",
+        'ru': "Уважаемый(ая) {owner}, на вашей карте, оканчивающейся на {last_4_digits}, баланс {balance} UZS. Статус: {status}."
+    },
+    'no_phone_number': {
+        'en': "Skipped SMS for {owner} (Card: {card_number}) - No phone number.",
+        'uz': "SMS yuborilmadi {owner} uchun (Karta: {card_number}) - Telefon raqami yo'q.",
+        'ru': "SMS пропущено для {owner} (Карта: {card_number}) - Нет номера телефона."
+    },
+    'simulated_sms_sent': {
+        'en': "Successfully simulated sending SMS to {count} card(s).",
+        'uz': "SMS yuborish muvaffaqiyatli simulyatsiya qilindi: {count} karta(lar).",
+        'ru': "Успешно симулирована отправка SMS на {count} карту(ы)."
+    },
+    'no_sms_sent': {
+        'en': "No SMS were sent (either no cards selected or no phone numbers found).",
+        'uz': "SMS yuborilmadi (kartalar tanlanmagan yoki telefon raqamlari topilmadi).",
+        'ru': "SMS не отправлено (карты не выбраны или номера телефонов не найдены)."
+    }
+}
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
