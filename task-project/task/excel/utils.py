@@ -35,19 +35,18 @@ if settings.TELEGRAM_BOT_TOKEN:
         _telegram_loop_thread = threading.Thread(target=_start_telegram_loop, daemon=True)
         _telegram_loop_thread.start()
 
-        # --- NEW: Wait for the event loop to be ready ---
-        # Polling check to ensure _telegram_loop is not None and is running
-        max_attempts = 20 # Try up to 20 times
+       
+        max_attempts = 20 
         attempt = 0
         while not (_telegram_loop and _telegram_loop.is_running()) and attempt < max_attempts:
             logger.debug(f"Waiting for Telegram asyncio loop to start... Attempt {attempt+1}/{max_attempts}")
-            time.sleep(0.1) # Wait 100ms before checking again
+            time.sleep(0.1) 
             attempt += 1
         
         if not (_telegram_loop and _telegram_loop.is_running()):
             raise RuntimeError("Telegram asyncio event loop did not start in time.")
         logger.info("Telegram asyncio loop detected as running.")
-        # --- END NEW ---
+    
 
         async def _init_bot_async():
             global _application, _botInstance
@@ -62,7 +61,7 @@ if settings.TELEGRAM_BOT_TOKEN:
 
     except Exception as e:
         logger.error(f"Couldn't create a telegram bot instance: {e}")
-        _botInstance = None # Ensure _botInstance is None if initialization fails
+        _botInstance = None 
 else:
     logger.warning("TELEGRAM_BOT_TOKEN is not configured in settings.")
 
@@ -88,7 +87,7 @@ class TelegramLogger:
             logger.error(f"An unexpected error occurred while sending Telegram log: {e}")
             return False 
     def send_log_messages(self, message_key: str, lang: str, data: dict):
-        if not self.is_configured: # Rely on the comprehensive check from __init__
+        if not self.is_configured: 
             logger.debug(f"TelegramLogger not configured, skipping log message for key '{message_key}'.")
             return False
         
@@ -100,22 +99,18 @@ class TelegramLogger:
             logger.error(f"Missing key in data for message_key '{message_key}', lang '{lang}': {e}. Template: '{message_template}'. Data: {data}")
             formatted_message = f"Error formatting message for key '{message_key}': Missing data for {e}. Data: {data}"
             
-            # Still attempt to send the error message if the core components are configured
+            
             if settings.TELEGRAM_BOT_CHAT_ID and _telegram_loop and _telegram_loop.is_running():
                 try:
                     future = asyncio.run_coroutine_threadsafe(self._send_message_async(settings.TELEGRAM_BOT_CHAT_ID, formatted_message), _telegram_loop)
-                    future.result(timeout=5) # Short timeout for error messages
+                    future.result(timeout=5) 
                 except Exception as sync_e:
                     logger.error(f"Failed to send Telegram error message via persistent loop: {sync_e}")
             return False # Formatting error means original message wasn't sent
         
         try:
-            # The check `if not (_telegram_loop and _telegram_loop.is_running()):` is now redundant here
-            # because self.is_configured already covers it.
-            
-            # Submit the actual message send to the persistent loop
             future = asyncio.run_coroutine_threadsafe(self._send_message_async(settings.TELEGRAM_BOT_CHAT_ID, formatted_message), _telegram_loop)
-            telegram_delivery_success = future.result(timeout=30) # Wait up to 30 seconds for delivery
+            telegram_delivery_success = future.result(timeout=30) 
 
             if telegram_delivery_success:
                 logger.debug(f"Successfully sent Telegram message: '{message_key}'")

@@ -72,7 +72,7 @@ def send_sms_action(modeladmin, request, queryset):
             )
             
             if telegram_success:
-                # <--- ИСПРАВЛЕНО: card.owner (не card.number)
+                
                 modeladmin.message_user(request, f"Telegram notification initiated for {card.owner} (PHONE: {card.phone_number}) for card {card.card_number}. ", messages.INFO)
                 sent_count +=1
             else:
@@ -83,13 +83,13 @@ def send_sms_action(modeladmin, request, queryset):
                 'owner': card.owner,
                 'card_number': card.card_number,
             }
-            # <--- ИСПРАВЛЕНО: send_log_message (не send_log_messages) и правильные аргументы
+            
             telegram_logger.send_log_messages('no_phone_number', admin_lang, skipped_data)
 
             modeladmin.message_user(request,f"Skipped Telegram notification for {card.owner} (Card: {card.card_number}) - No phone number.", messages.WARNING)
             SmsLog.objects.create(
                 card=card,
-                # <--- ИСПРАВЛЕНО: message (не messages)
+               
                 message=settings.TELEGRAM_LOG_MESSAGES['no_phone_number'].get(admin_lang,'').format(**skipped_data),
                 success=False
             )
