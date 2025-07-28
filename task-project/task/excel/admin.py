@@ -116,16 +116,7 @@ class CardAdmin(ImportExportModelAdmin):
 
 
     def save_model(self, request, obj, form, change):
-        print(f"DEBUG ADMIN: save_model - form.is_valid(): {form.is_valid()}")
-        print(f"DEBUG ADMIN: save_model - form.errors: {form.errors}")
-        # DEBUG: What is card_status in cleaned_data *before* Django applies it to the model instance?
-        print(f"DEBUG ADMIN: save_model - form.cleaned_data['card_status'] BEFORE super(): {form.cleaned_data.get('card_status')}")
-        # DEBUG: What is card_status on the model instance *before* saving?
-        print(f"DEBUG ADMIN: save_model - obj.card_status BEFORE super(): {obj.card_status}")
-
-        super().save_model(request, obj, form, change) # This is where the model is saved
-
-        # DEBUG: What is card_status on the model instance *after* saving?
+        super().save_model(request, obj, form, change) 
         print(f"DEBUG ADMIN: save_model - obj.card_status AFTER super(): {obj.card_status}")
 @admin.register(SmsLog)
 class SMSLogAdmin(admin.ModelAdmin):
