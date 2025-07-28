@@ -211,28 +211,11 @@ def validate_UZB_card_numbers(row:str) -> str:
         return cleaned_card_number
     else:
         logger.error("Invalid length of card number.")    
-     
- 
-        
-
-
-
     
-
 def card_number(row:str) -> str:
     return  re.sub(r'\D','', row)[:16]
-                 # did it myself 
-                #HUMO UZCARD diff numbers 
 def phone_number(row:str) -> str:
-    return re.sub(r'\D','',row)[:len(row)-1]
-            # phone_str = str(row['phone_number']).strip()
-            # #
-            # cleaned_phone = re.sub(r'\D', '', phone_str) 
-            # # regular expressionsda ozini mini languagi bor va '/D' non-digits dgani non digitsla bosa ulani yoqot dgani yani replace with '' blank space
-            # row['phone_number'] = cleaned_phone[:20] 
-            # #indexation 20 gacha dgani chiqar - > list = [start:end:steps] and we used[:20]
-            # #validation 998 12 xonali in case - > operator code(90,99,77 and etc)
-
+    return re.sub(r"\D", "", row)
 
 def balance_sorting(row:str)->str:
     balance_lower = str(row).lower().replace('mlrd uzs','').replace(' ','').replace(',','')
