@@ -9,25 +9,44 @@ from django.contrib import messages
 from datetime import datetime
 import re
 from .utils import *
+from .forms import CardAdminForms
 from .resource import CardResource
 import time
-# Создаем нашего "почтальона" один раз.
 telegram_logger = get_telegram_logger()
  
 def before_import_row(self, row, **kwargs):
+    
+    if 'card_number' in row and row['card_number']:
+        row['card_number']= validate_UZB_card_numbers(str(row['card_number']))
+    
+
+    if 'balance' in row and row['balance']:
+        row['balance'] = balance_sorting(str(row['balance']))
+    if 'card_status' in row and row['card_status']:
+        row['card_status'] = card_status(str(row['card_status']))
+
+    if 'expire' in row and row['expire']:
+        sorted_expiry = expire_date_sorting(str(row['expire']))
+        if sorted_expiry:
+            is_expired = validate_card_expiry(sorted_expiry,row) 
+            if is_expired:
+                row['card_status'] = "EXPIRED"
+            else: # Card is not expired
+                row['card_status'] = "ACTIVE"
+
+    if 'phone_number' in row and row['phone_number']:
+        row['phone_number']= validate_UZB_card_numbers(str(row['phone_number']))
+    
+
+        # card_number(row)
+        # expire_date_sorting(row)
+
         
-        card_number(row)
-        expire_date_sorting(row)
-        phone_number(row=row)
-        balance_sorting(row)
-        card_status(row)
+        # balance_sorting(row)
+        # card_status(row)
 
 @admin.action(description='Send SMS to selected cards')
 def send_sms_action(modeladmin, request, queryset):
-    """
-    Действие админки для отправки симулированных SMS (Telegram уведомлений)
-    выбранным картам.
-    """
     sent_count = 0
 
     admin_lang = 'ru'
@@ -36,7 +55,7 @@ def send_sms_action(modeladmin, request, queryset):
         if card.phone_number:
             message_data = {
                 'owner': card.owner,
-                'last_4_digits': card.card_number[-4:], # <--- ИСПРАВЛЕНО: card.card_number
+                'last_4_digits': card.card_number[-4:], 
                 'balance': card.balance,
                 'status': card.get_card_status_display()
             }
@@ -87,17 +106,30 @@ def send_sms_action(modeladmin, request, queryset):
 # <--- ИСПРАВЛЕНО: @admin.register(Card) (не Cards)
 @admin.register(Cards)
 class CardAdmin(ImportExportModelAdmin):
-    # <--- ИСПРАВЛЕНО: expire_date (не expire)
+
+    form =CardAdminForms
     resource_class = CardResource
     list_display = ('card_number', 'owner', 'expire', 'phone_number', 'card_status', 'balance',) 
-    list_filter = ('card_status', 'owner',) # <--- ИСПРАВЛЕНО: status (не card_status)
+    list_filter = ('card_status', 'owner',) 
     search_fields = ('card_number', 'owner', 'phone_number',)
     actions = [send_sms_action]
 
+
+    def save_model(self, request, obj, form, change):
+        print(f"DEBUG ADMIN: save_model - form.is_valid(): {form.is_valid()}")
+        print(f"DEBUG ADMIN: save_model - form.errors: {form.errors}")
+        # DEBUG: What is card_status in cleaned_data *before* Django applies it to the model instance?
+        print(f"DEBUG ADMIN: save_model - form.cleaned_data['card_status'] BEFORE super(): {form.cleaned_data.get('card_status')}")
+        # DEBUG: What is card_status on the model instance *before* saving?
+        print(f"DEBUG ADMIN: save_model - obj.card_status BEFORE super(): {obj.card_status}")
+
+        super().save_model(request, obj, form, change) # This is where the model is saved
+
+        # DEBUG: What is card_status on the model instance *after* saving?
+        print(f"DEBUG ADMIN: save_model - obj.card_status AFTER super(): {obj.card_status}")
 @admin.register(SmsLog)
 class SMSLogAdmin(admin.ModelAdmin):
     list_display = ('card', 'message', 'sent_at', 'success',)
-    # <--- ИСПРАВЛЕНО: card__status (не card__card_status)
     list_filter = ('sent_at', 'success', 'card__card_status',)
     search_fields = ('card__card_number', 'card__owner', 'message',)
     readonly_fields = ('card', 'message', 'sent_at', 'success',)

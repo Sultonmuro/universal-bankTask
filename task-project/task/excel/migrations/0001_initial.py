@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('card_number', models.CharField(max_length=19, unique=True)),
-                ('owner', models.CharField(max_length=20, unique=True)),
+                ('owner', models.CharField(max_length=20)),
                 ('expire', models.CharField(help_text='Expiration date in MM/YY format (e.g., 12/25)', max_length=5)),
                 ('phone_number', models.CharField(blank=True, max_length=15, null=True)),
                 ('card_status', models.CharField(choices=[('ACTIVE', 'Active'), ('EXPIRE', 'Expired'), ('DECLINED', 'Declined')], default='ACTIVE', max_length=10)),

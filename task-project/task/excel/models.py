@@ -9,7 +9,7 @@ CARD_STATUS = (
 # 
 class Cards(models.Model):
     card_number = models.CharField(max_length=19,unique=True)
-    owner = models.CharField(max_length=20,unique=True)
+    owner = models.CharField(max_length=20)
     expire = models.CharField(max_length=5, help_text= "Expiration date in MM/YY format (e.g., 12/25)")
     phone_number = models.CharField(max_length=15,blank=True,null=True)
     card_status = models.CharField(
