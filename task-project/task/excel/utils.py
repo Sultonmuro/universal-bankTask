@@ -11,6 +11,7 @@ from asgiref.sync import async_to_sync
 from telegram.ext import Application
 import threading
 import time
+import decimal
 logger = logging.getLogger('__name__')
 _botInstance = None
 _application = None
@@ -106,7 +107,7 @@ class TelegramLogger:
                     future.result(timeout=5) 
                 except Exception as sync_e:
                     logger.error(f"Failed to send Telegram error message via persistent loop: {sync_e}")
-            return False # Formatting error means original message wasn't sent
+            return False 
         
         try:
             future = asyncio.run_coroutine_threadsafe(self._send_message_async(settings.TELEGRAM_BOT_CHAT_ID, formatted_message), _telegram_loop)
@@ -133,18 +134,19 @@ def get_telegram_logger():
 
 def validate_UZB_phone_number(row:str) ->str:
     operators = {
-         "Uzmobile":99,
-         "Beeline":90,
-         "Ucel":94,
-         "Humans":77
+         "Uzmobile":(99,95,70,77),
+         "Beeline":(90,91) ,
+         "Ucel":(94,93),
+         "Humans":(33),
     }
     clean_phone = re.sub(r"\D", "", row)
 
 
+    pattern = r"^998\d{2}\d{7}"
     if not (len(clean_phone) ==12 and clean_phone.startswith('998')):
         logger.error(f"Validation failed: invalid uzbek phone number format or length")
         raise ValueError(f"Invalid Uzbek phone number: {clean_phone}")
-    if not re.match(r"^998\d{2}\d{7}",clean_phone):
+    if not re.match(pattern,clean_phone):
         logger.error(f"Validation failed: Final mismatch for cleaned phone numnber: '{clean_phone}'")
         raise ValueError(f"Phone number format mismatch after cleaning: '{row}'")
     
@@ -156,11 +158,12 @@ def validate_UZB_phone_number(row:str) ->str:
         logger.error(f"Validation failed: Could not parse operator code from:{operator_code_str}")
 
         raise ValueError(f"Invalid operator code in phone number: {row}")
-    if operator_code not in operators.values():
+    valid_codes = {99,95,70,77,90,91,94,93,33}
+    if operator_code not in valid_codes:
         logger.error(f"Validation failed: Operator code '{operator_code}' not recognized")
         raise ValueError(f"Operator code: '{operator_code}' not recognized for phone numbers in Uzbekistan.")
     
-    logger.info(f"phone number '{clean_phone}' is valid and belongs to a recognized operator")
+    logger.info(f"phone number '{clean_phone}' is valid and belongs to a recognized operator:{operator_code}")
     return clean_phone
 
 
@@ -177,6 +180,10 @@ def validate_UZB_card_numbers(row:str) -> str:
 
     sorted_prefixes = sorted(CARD_PREFIXES.keys(),key=len,reverse=True)
 
+    digits = list()
+    total_sum = 0
+
+    
 
     for prefix in sorted_prefixes:
         if cleaned_card_number.startswith(prefix):
@@ -186,6 +193,19 @@ def validate_UZB_card_numbers(row:str) -> str:
     if detected_card_type == "UNKNOWN":
         logger.error(f"ERROR: We could not detect any card number. {cleaned_card_number}")
     
+    for digit in row:
+        if not digit.isdigit():
+            logger.error(f"ERROR: Invalid digit:'{digit}' in card number {cleaned_card_number}")
+        digits.append(int(digit))
+#luhn algorithm
+    for i,num in enumerate(digits):
+        if i%2==1:
+            doubled = num *2
+            if doubled>9:
+                doubled -=9
+                
+        else:
+            total_sum+=num
 
     match detected_card_type:
          case "HUMO":
@@ -212,32 +232,39 @@ def card_number(row:str) -> str:
 def phone_number(row:str) -> str:
     return re.sub(r"\D", "", row)
 
-def balance_sorting(row:str)->str:
-    balance_lower = str(row).lower().replace('mlrd uzs','').replace(' ','').replace(',','')
+
+def balance_sorting(row:str):
+    balance_str = str(row).lower().replace('mlrd uzs','').replace(' ','').replace(',','')
 
      
     try:
-                if 'mlrd' in str(row['balance']).lower():
-                     value = float(balance_lower) * 1_000_000_000 
+                if 'mlrd' in balance_str:
+                     value = decimal.Decimal(balance_str) * 1_000_000_000 
                 else:
-                    value = float(balance_lower)
-                row['balance'] = str(round(value, 2))
+                    value = decimal.Decimal(balance_str)
+                return value
     except ValueError:
-                row['balance'] = '0.00'
-def card_status(row:str)->str:
+                balance_str = decimal.Decimal(0.00)
+                return balance_str
+def card_status(row:str):
             if 'card_status' in row and row['card_status']:
                 status_upper = str(row['card_status']).upper()
                 valid_statuses = [choice[0] for choice in CARD_STATUS]
                 if status_upper not in valid_statuses:
                     row['card_status'] = 'ACTIVE' 
-                # else:
-                #     row['card_status'] = 'EXPIRED'
+                
                 #MAKE IT expire in case if expire date is literally expired  
 
 def expire_date_sorting(raw_expiry_str: str) -> date:
     expiry_str = raw_expiry_str.strip()
+    # we should divide expiry str from 03/2024 or anything else to one standarlazied format of mm/yy
+    # raw expire date 
+  
 
-    match = re.match(r"^(\d{1,2})/(\d{2})$", expiry_str)
+    parsed_expiry= datetime.strptime(expiry_str,"%m/%y")
+    checked_expiry_str = datetime.strftime(parsed_expiry,"%m/%y")
+                
+    match = re.match(r"^(\d{1,2})/(\d{2})$", checked_expiry_str)
     if not match:
         raise ValueError(f"Invalid expiry date format. Expected MM/YY (e.g., 12/25). Got: '{expiry_str}'")
 
@@ -261,6 +288,10 @@ def expire_date_sorting(raw_expiry_str: str) -> date:
         full_year = (current_year_full // 100 - 1) * 100 + year_short
     else: 
         full_year = (current_year_full // 100 + 1) * 100 + year_short
+    # if year_short <30:
+    #     full_year = 2000 + year_short
+    # else:
+    #     full_year = 1900 + year_short
     
     try:
         if month == 12:
@@ -274,12 +305,12 @@ def expire_date_sorting(raw_expiry_str: str) -> date:
     
 
 
-def validate_card_expiry(expiry_str:date,data_container:dict) -> None:
+def validate_card_expiry(expiry_str:date,data_container:dict) :
     now = date.today() 
     print(f"DEBUG validate_card_expiry: parsed_expiry_date: {expiry_str} (type: {type(expiry_str)})")
     print(f"DEBUG validate_card_expiry: now_date: {now} (type: {type(now)})")
     if expiry_str < now:
-        print(f"DEBUG: Card with expiry:{expiry_str} and the moment:{expiry_str}. Card has been expired")
+        print(f"DEBUG: Card with expiry:{expiry_str} and the moment:{now}. Card has been expired")
         data_container['card_status'] = "EXPIRE"
     else:
         print(f"DEBUG: Card has not been expired. {expiry_str}")

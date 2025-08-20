@@ -13,43 +13,14 @@ from .forms import CardAdminForms
 from .resource import CardResource
 import time
 telegram_logger = get_telegram_logger()
- 
-def before_import_row(self, row, **kwargs):
-    
-    if 'card_number' in row and row['card_number']:
-        row['card_number']= validate_UZB_card_numbers(str(row['card_number']))
-    
 
-    if 'balance' in row and row['balance']:
-        row['balance'] = balance_sorting(str(row['balance']))
-    if 'card_status' in row and row['card_status']:
-        row['card_status'] = card_status(str(row['card_status']))
 
-    if 'expire' in row and row['expire']:
-        sorted_expiry = expire_date_sorting(str(row['expire']))
-        if sorted_expiry:
-            is_expired = validate_card_expiry(sorted_expiry,row) 
-            if is_expired:
-                row['card_status'] = "EXPIRED"
-            else: # Card is not expired
-                row['card_status'] = "ACTIVE"
-
-    if 'phone_number' in row and row['phone_number']:
-        row['phone_number']= validate_UZB_card_numbers(str(row['phone_number']))
-    
-
-        # card_number(row)
-        # expire_date_sorting(row)
-
-        
-        # balance_sorting(row)
-        # card_status(row)
 
 @admin.action(description='Send SMS to selected cards')
 def send_sms_action(modeladmin, request, queryset):
     sent_count = 0
 
-    admin_lang = 'ru'
+    admin_lang = 'uz'
 
     for card in queryset:
         if card.phone_number:
@@ -60,7 +31,8 @@ def send_sms_action(modeladmin, request, queryset):
                 'status': card.get_card_status_display()
             }
 
-            owner_telegram_lang = 'uz'
+            owner_telegram_lang = 'ru'
+                
 
 
             telegram_success = telegram_logger.send_log_messages('card_balance_status', owner_telegram_lang, message_data)
@@ -98,12 +70,10 @@ def send_sms_action(modeladmin, request, queryset):
         success_message_template = settings.TELEGRAM_LOG_MESSAGES['simulated_sms_sent'].get(admin_lang,'').format(count=sent_count)
         modeladmin.message_user(request, success_message_template, messages.SUCCESS)
     else:
-        # <--- ИСПРАВЛЕНО: 'no_sms_sent' (с нижним подчеркиванием)
         warning_message_template = settings.TELEGRAM_LOG_MESSAGES['no_sms_sent'].get(admin_lang,'')
         modeladmin.message_user(request, warning_message_template, messages.WARNING)
 
 
-# <--- ИСПРАВЛЕНО: @admin.register(Card) (не Cards)
 @admin.register(Cards)
 class CardAdmin(ImportExportModelAdmin):
 
