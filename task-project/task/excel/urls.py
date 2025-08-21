@@ -2,6 +2,6 @@ from .models import Cards
 from django.urls import path
 from . import views
 from django.contrib import admin
-urlspatterns = [
+urlpatterns = [
     path('admin/',admin.site.urls)
 ] 
