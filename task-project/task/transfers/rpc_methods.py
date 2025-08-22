@@ -47,16 +47,16 @@ def transfer_history(card_number:str,start_date:str,end_date:str,status:str):
     read_transfers =view_transfers(card_number,start_date,end_date,status)
     transfers = list()
 
-    for transfer in read_transfers:
-        transfers.append(
-            {
-                "ext_id":str(transfer.ext_id),
-                "sending_amount":transfer.sending_amount,
-                "state":transfer.state,
-                "created_at":transfer.created_at
-            }
-        )
-        transfer.save()
+    # for transfer in read_transfers:
+    #     transfers.append(
+    #         {
+    #             "ext_id":str(transfer.ext_id),
+    #             "sending_amount":transfer.sending_amount,
+    #             "state":transfer.state,
+    #             "created_at":transfer.created_at
+    #         }
+    #     )
+    #     transfer.save()
     
     return {"transfers":transfers}
 

@@ -53,15 +53,43 @@ def validate_otp(ext_id,otp):
         
 
 def view_transfers(card_number:str,start_date:str,end_date:str,status:str):
-    filtered_transfer = Transfer.objects.get(receiver_card_number=card_number,start_date=start_date,end_date=end_date,status=status)
-    if filtered_transfer:
-        try:
+    filtered_transfer = Transfer.objects.filter(receiver_card_number=card_number,state=status)
+    # filtered_transfer.confirmed_at = datetime.strftime(start_date,"%m/%y")
+    # filtered_transfer.cancelled_at = datetime.strftime(end_date,"%m/%y")
+    try:
+        if filtered_transfer:
             # return {"ext_id":filtered_transfers.ext_id,"sending_amount":filtered_transfers.sending_amount,"state":filtered_transfers.state,"created_at":created_at}
-            return filtered_transfer
-        except Transfer.DoesNotExist as e:
+              return {
+                  "ext_id":filtered_transfer.ext_id,
+                  "sending_amount":filtered_transfer.sending_amount,
+                  "state":filtered_transfer.state,
+                  "created_at":filtered_transfer.created_at
+                    }
+    except Transfer.DoesNotExist as e:
             logging.error(f"{filtered_transfer} was not Found.")
             return {"error":f"{e}"}
-        
+    
+
+
+
+
+
+
+def get_transfer_by_ext_id(ext_id):
+    byId = Transfer.objects.get(ext_id=ext_id)
+    try:
+        if byId:
+         return {"sender_card":byId.sender_card_number,
+                "receiver_card":byId.receiver_card_number,
+                "amount":byId.sending_amount,
+                "currency":byId.currency}
+    except Transfer.DoesNotExist as e:
+        logging.error(f"Transfer with '{byId}' ext_id is not found")
+        return {"error":"Not found"}
+
+
+
+
 
 
 

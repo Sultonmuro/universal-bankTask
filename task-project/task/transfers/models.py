@@ -3,7 +3,7 @@ from excel.models import Cards
 from django.utils import timezone
 import random
 import string
-
+import datetime
 
 TRANSFER_STATE_CHOICES = (
     ('CREATED', 'Created'),
@@ -51,7 +51,8 @@ class Transfer(models.Model):
     confirmed_at = models.DateTimeField(blank=True,null=True)
     cancelled_at = models.DateTimeField(blank=True,null=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
+        
     def generate_otp_code(self):
         return ''.join(random.choices(string.digits, k=6))
     
