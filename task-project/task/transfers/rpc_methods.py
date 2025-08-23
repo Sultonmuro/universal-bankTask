@@ -69,3 +69,24 @@ def transfer_cancel(ext_id):
     transfer.save()
     return {"state":transfer.state}
 
+@method 
+def view_transfer_list(ext_id):
+    transfer = Transfer.objects.get(ext_id=ext_id)
+    end_date = ""
+
+    try:
+        if transfer:
+            if transfer.state == "cancelled":
+                end_date = transfer.cancelled_at
+            else:
+                end_date = None
+            return {
+                "card_number":transfer.sender_card_number,
+                "start_date":str(transfer.created_at),
+                "end_date":str(end_date),
+                "status":transfer.state
+            }
+    except Transfer.DoesNotExist as e:
+        logging.error("Not Found")
+        return {"error":"Not Found"}
+    

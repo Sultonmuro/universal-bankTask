@@ -53,21 +53,20 @@ def validate_otp(ext_id,otp):
         
 
 def view_transfers(card_number:str,start_date:str,end_date:str,status:str):
-    filtered_transfer = Transfer.objects.filter(receiver_card_number=card_number,state=status)
-    # filtered_transfer.confirmed_at = datetime.strftime(start_date,"%m/%y")
-    # filtered_transfer.cancelled_at = datetime.strftime(end_date,"%m/%y")
+    filtered_transfer = Transfer.objects.get(receiver_card_number=card_number,state=status)
+    start_date = filtered_transfer.created_at
     try:
-        if filtered_transfer:
-            # return {"ext_id":filtered_transfers.ext_id,"sending_amount":filtered_transfers.sending_amount,"state":filtered_transfers.state,"created_at":created_at}
-              return {
-                  "ext_id":filtered_transfer.ext_id,
-                  "sending_amount":filtered_transfer.sending_amount,
-                  "state":filtered_transfer.state,
-                  "created_at":filtered_transfer.created_at
-                    }
+        if filtered_transfer.state:
+           return {
+               "ext_id":filtered_transfer.ext_id,
+               "sending_amount":filtered_transfer.sending_amount,
+               "state":filtered_transfer.state,
+               "created_at":filtered_transfer.created_at
+           }  
     except Transfer.DoesNotExist as e:
-            logging.error(f"{filtered_transfer} was not Found.")
-            return {"error":f"{e}"}
+        logging.error("Not Found", e)
+        return {"error":"Not Found"}
+    
     
 
 
