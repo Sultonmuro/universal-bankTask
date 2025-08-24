@@ -11,7 +11,7 @@ from jsonrpcserver import dispatch
 import json
 from excel.utils import *
 from transfers.utils import *
-
+from django.http import JsonResponse
 @method 
 def transfer_create(ext_id,sender_card_number:str,sender_card_expiry:str,receiver_card_number:str,
                     sender_phone:str,sending_amount:str,currency:str):
@@ -88,5 +88,5 @@ def view_transfer_list(ext_id):
             }
     except Transfer.DoesNotExist as e:
         logging.error("Not Found")
-        return {"error":"Not Found"}
+        return JsonResponse({"Error":{e}},status=404)
     

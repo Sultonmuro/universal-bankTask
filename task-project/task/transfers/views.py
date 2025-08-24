@@ -20,3 +20,4 @@ def rpc_handler(request):
         return JsonResponse(json.loads(response),safe=False)
     except Exception as e:
         logger.error('Returning error:',e)
+        
