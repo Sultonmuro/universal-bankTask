@@ -39,26 +39,13 @@ def transfer_create(ext_id,sender_card_number:str,sender_card_expiry:str,receive
 
 @method 
 def transfer_confirm(ext_id,otp):
-    validation = validate_otp(ext_id=ext_id,otp=otp)
-    return validation
+    return validate_otp(ext_id=ext_id,otp=otp)
+
 
 @method 
 def transfer_history(card_number:str,start_date:str,end_date:str,status:str):
-    read_transfers =view_transfers(card_number,start_date,end_date,status)
-    transfers = list()
-
-    # for transfer in read_transfers:
-    #     transfers.append(
-    #         {
-    #             "ext_id":str(transfer.ext_id),
-    #             "sending_amount":transfer.sending_amount,
-    #             "state":transfer.state,
-    #             "created_at":transfer.created_at
-    #         }
-    #     )
-    #     transfer.save()
-    
-    return {"transfers":transfers}
+    read_transfers = view_transfers(card_number,start_date,end_date,status)
+    return {"transfers":read_transfers}
 
 @method 
 def transfer_cancel(ext_id):
@@ -89,4 +76,6 @@ def view_transfer_list(ext_id):
     except Transfer.DoesNotExist as e:
         logging.error("Not Found")
         return JsonResponse({"Error":{e}},status=404)
-    
+@method 
+def read_transfers():
+    return read_tf()
