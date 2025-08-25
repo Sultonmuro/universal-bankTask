@@ -74,7 +74,7 @@ def view_transfers(card_number:str,start_date:str,end_date:str,status:str):
                "ext_id":t.ext_id,
                "sending_amount":t.sending_amount,
                "state":t.state,
-               "created_at":t.created_at
+               "created_at":str(t.created_at)
            }  for t in filtered_transfers]
     except Transfer.DoesNotExist as e:
         logging.error("Not Found", e)
